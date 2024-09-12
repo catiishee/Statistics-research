@@ -1,0 +1,210 @@
+---
+title: "Лабораторная 3"
+author: "Щербинина Екатерина Б21-901"
+date: "2024-02-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Лабораторная работа №3**
+
+Загрузим необходимые данные и с помощью функции na.omit() удалим строки с пропущенными значениями из набора.
+
+```{r download}
+library(openxlsx)
+library(ggplot2)
+Data <- read.xlsx("C:/Основное/R/3ЛАБА/Вар_33_Полные_данные (1).xlsx") 
+print(Data)
+known_data <- na.omit(Data)
+print(known_data)
+```
+
+Создадим новый столбец, которые содержит числовое представление уровня удовлетворенности жизнью в зависимости от исходной строковой переменной Ощущаемое счастье.
+
+```{r rate}
+known_data$Rate <- ifelse(known_data$Ощущаемое.счастье == "Hopeless", 0,
+     ifelse(known_data$Ощущаемое.счастье == "Depressed", 1,
+     ifelse(known_data$Ощущаемое.счастье == "Suffering", 2,
+    ifelse(known_data$Ощущаемое.счастье == "Strugglng", 3,
+    ifelse(known_data$Ощущаемое.счастье == "Coping", 4,
+           ifelse(known_data$Ощущаемое.счастье == "Just ok", 5,
+                  ifelse(known_data$Ощущаемое.счастье == "Doing well", 6,
+                         ifelse(known_data$Ощущаемое.счастье == "Blooming", 7,
+                                ifelse(known_data$Ощущаемое.счастье == "Thriving", 8,
+                                       ifelse(known_data$Ощущаемое.счастье == "Prospering", 9,NA
+                                      ))))))))))
+print(known_data)
+```
+
+Определим какие из признаков состояния наиболее сильно связаны с интегральной оценкой счастья (благополучия) респондента.
+
+```{r factor}
+sort_data <- known_data[order(known_data$Rate), ]
+print(sort_data)
+sort_data$Ощущаемое.счастье <- factor(sort_data$Ощущаемое.счастье,levels = unique(sort_data$Ощущаемое.счастье))
+print(sort_data)
+features <- colnames(sort_data[ ,12:24])
+print(features)
+```
+
+```{r density}
+color <- colorRampPalette(c("pink", "blue")) 
+graphics <- lapply(features, function(feature) {
+  print(ggplot(data = sort_data, aes(x = .data[[feature]], group = Rate, fill = Ощущаемое.счастье)) +
+          geom_density(alpha = 0.7) +
+          scale_fill_manual(values = color(10)))
+})
+```
+
+Определим как влияют признаки причины на наиболее важные признаки состояния.
+
+```{r свобода граждан самостоятельно принимать жизненно важные решения}
+model_freedom_test <- lm(known_data$Свобода.граждан.самостоятельно.принимать.жизненно.важные.решения ~ ., data=known_data[, 2:11])
+summary(model_freedom_test)
+formula_freedom <- formula(known_data$Свобода.граждан.самостоятельно.принимать.жизненно.важные.решения ~ `Объем.потребленного.алкоголя.в.год,.л.`
+                              + Количество.членов.семьи  + 
+                                Количество.лет.образования  + 
+                                `Доля.от.дохода.семьи.которая.тратится.на.продовольствие,.%` +  Волатильность.потребительских.цен.в.сообществе )
+model_freedom <- lm(formula = formula_freedom, data=known_data[ ,2:11])
+```
+
+```{r индекс щедрости}
+model_generosity_test <- lm(known_data$Индекс.Щедрости ~ ., data=known_data[ ,2:11])
+summary(model_generosity_test)
+formula_generosity <- formula(known_data$Индекс.Щедрости ~ `Объем.потребленного.алкоголя.в.год,.л.`  + Количество.членов.семьи + Количество.лет.образования     +   
+                               `Охват.беспроводной.связи.в.сообществе,.%`
+                               + Волатильность.потребительских.цен.в.сообществе)
+model_generosity <- lm(formula = formula_generosity, data=known_data[ ,2:11])
+```
+
+```{r индекс страха социальных конфликтов}
+model_conflict_test <- lm(known_data$Индекс.страха.социальных.конфликтов ~ ., data=known_data[, 2:11])
+summary(model_conflict_test)
+formula_conflict <- formula(known_data$Индекс.страха.социальных.конфликтов ~ `Среднегодовой.доход,.тыс..$`
+                                    +Количество.лет.образования + `Доля.от.дохода.семьи.которая.тратится.на.продовольствие,.%` 
+                                    + Коэффициент.Джини.сообщества+ 
+                                      `Количество.смертей.от.вирусных.и.респираторных.заболеваний.в.сообществе,.тыс..человек`)
+model_conflict <- lm(formula = formula_conflict, data=known_data[ ,2:11])
+```
+
+```{r индекс продовольственной безопасности}
+model_safety_test <- lm(known_data$Индекс.продовольственной.безопасности ~ ., data=known_data[, 2:11])
+summary(model_safety_test)
+formula_safety <- formula(known_data$Индекс.продовольственной.безопасности ~ `Объем.потребленного.алкоголя.в.год,.л.` + 
+                                     Количество.членов.семьи +`Издержки.сообщества.на.окружающую.среду,.млн..$` 
+                                +  `Среднегодовой.доход,.тыс..$` + Волатильность.потребительских.цен.в.сообществе )
+model_safety <- lm(formula = formula_safety, data=known_data[ ,2:11])
+```
+
+```{r чувство неравенства доходов в обществе}
+model_income_test <- lm(known_data$Чувство.неравенства.доходов.в.обществе ~ ., data=known_data[, 2:11])
+summary(model_income_test)
+formula_income <- formula(known_data$Чувство.неравенства.доходов.в.обществе ~ `Среднегодовой.доход,.тыс..$`   + 
+                                     `Объем.потребленного.алкоголя.в.год,.л.`  +Количество.лет.образования
+                                +  `Издержки.сообщества.на.окружающую.среду,.млн..$` + Волатильность.потребительских.цен.в.сообществе )
+model_income <- lm(formula = formula_income, data=known_data[ ,2:11])
+```
+
+```{r predict_features}
+subset_data <- subset(Data, Ощущаемое.счастье == "Неизвестно")
+subset_data$Свобода.граждан.самостоятельно.принимать.жизненно.важные.решения = predict(model_freedom, subset_data)
+subset_data$Индекс.Щедрости = predict(model_generosity,subset_data)
+subset_data$Индекс.страха.социальных.конфликтов = predict(model_conflict, subset_data)
+subset_data$Индекс.продовольственной.безопасности = predict(model_safety, subset_data)
+subset_data$Чувство.неравенства.доходов.в.обществе = predict(model_income, subset_data)
+subset_data <- subset_data[, colSums(is.na(subset_data)) == 0]
+subset_data <- subset_data[-17]
+print(subset_data)
+```
+
+Построим логистическую модель с помощью биномиального распределения для каждой категории счастья.
+
+```{r glm}
+for (i in 0:9) {
+  known_data[[paste0("Rate", i)]] <- 0
+}
+
+for(i in 1:nrow(known_data)){
+  for(k in 0:9){
+    if(known_data$Rate[i]==k){
+      known_data[i, 27+k] <- 1
+    }
+  }
+}
+
+print(known_data)
+
+glm_happiness <- lapply(0:9, function(i) {
+  glm(as.formula(paste("Rate", i, " ~ Индекс.Щедрости + Свобода.граждан.самостоятельно.принимать.жизненно.важные.решения + Индекс.страха.социальных.конфликтов + Индекс.продовольственной.безопасности + Чувство.неравенства.доходов.в.обществе", sep = "")), data = known_data, family = binomial)
+  })
+
+print(glm_happiness)
+```
+
+```{r probability}
+probability <- matrix(nrow = nrow(known_data), ncol = 10)
+for (i in 1:10) {
+  probability[, i] <- glm_happiness[[i]]$fitted.values
+}
+
+table <- data.frame(probability)
+print(table)
+```
+
+Проверка правильности прогнозирования уровня счастья.
+
+```{r micro Precision}
+test_rate <- numeric(nrow(known_data))
+test_rate <- apply(probability, 1, function(x) which.max(x) -1)
+print(test_rate)
+
+TP <- sum(test_rate == known_data$Rate)
+FP <- length(test_rate) - TP
+precision <- TP/(TP + FP) 
+print(precision)
+```
+
+Пользуясь найденными закономерностями спрогнозируем категории счастья респондентов у которых интегральная характеристика отмечена как "Неизвестно".
+
+```{r}
+##prognos <- predict(glm_happiness[[i]], subset_data, type = "response")
+prognos <- matrix(nrow = nrow(subset_data), ncol = 10)
+for (i in 1:10) {
+  prognos[, i] <- predict(object = glm_happiness[[i]], newdata = subset_data, type = "response")
+}
+
+happiness <- numeric(nrow(subset_data))
+for(i in 1:nrow(subset_data)){
+  happiness[i] <- which.max(prognos[i,])-1
+}
+
+rate <- ifelse(happiness == 0, "Hopeless",
+               ifelse(happiness == 1, "Depressed",
+                      ifelse(happiness == 2, "Suffering",
+                             ifelse(happiness == 3, "Struggling",
+                                    ifelse(happiness == 4, "Coping",
+                                           ifelse(happiness == 5, "Just ok",
+                                                  ifelse(happiness == 6, "Doing well",
+                                                         ifelse(happiness == 7, "Blooming",
+                                                                ifelse(happiness == 8, "Thriving",
+                                                                       ifelse(happiness == 9, "Prospering", NA))))))))))
+
+result <- data.frame(subset_data, "Ощущаемое.счастье" = rate)
+result$Укрупненная.область.счастья <- ifelse(result$Ощущаемое.счастье == "Hopeless" | 
+                                result$Ощущаемое.счастье == "Depressed" | result$Ощущаемое.счастье == "Suffering", "Suffering area",
+                              ifelse(result$Ощущаемое.счастье == "Strugglng" | 
+                                       result$Ощущаемое.счастье == "Coping" | result$Ощущаемое.счастье == "Just ok", "Struggling area",
+                                     "Thriving area"))
+print(result)
+```
+
+Результаты запишем в файл.
+
+```{r}
+write.xlsx(result, "C:/Основное/R/3ЛАБА/Вар_33.xlsx")
+```
+
+
