@@ -1,5 +1,5 @@
 ---
-title: "Лабораторная 3"
+title: "Statistics research in regression analysis"
 author: "Щербинина Екатерина Б21-901"
 date: "2024-02-12"
 output: html_document
@@ -9,14 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# **Лабораторная работа №3**
+# **Statistics research in regression analysis**
 
 Загрузим необходимые данные и с помощью функции na.omit() удалим строки с пропущенными значениями из набора.
 
 ```{r download}
 library(openxlsx)
 library(ggplot2)
-Data <- read.xlsx("C:/Основное/R/3ЛАБА/Вар_33_Полные_данные (1).xlsx") 
+Data <- read.xlsx("C:/Основное/R/3LAB/Вар_33_Полные_данные (1).xlsx") 
 print(Data)
 known_data <- na.omit(Data)
 print(known_data)
@@ -204,7 +204,7 @@ print(result)
 Результаты запишем в файл.
 
 ```{r}
-write.xlsx(result, "C:/Основное/R/3ЛАБА/Вар_33.xlsx")
+write.xlsx(result, "C:/Основное/R/3LAB/Вар_33.xlsx")
 ```
 
 
