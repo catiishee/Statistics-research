@@ -35,9 +35,3 @@ The analysis and predictions are performed using R Markdown scripts included in 
 - Enhance data quality by incorporating more comprehensive datasets to further refine the prediction models.
 - Explore additional factors influencing happiness, such as mental health metrics and environmental influences.
 - Develop interactive dashboards to visualize and communicate findings to a broader audience.
-
-## Author
-- **Ekaterina Shcherbinina** - Student, Group B21-901, National Research Nuclear University MEPhI.
-
-## Acknowledgments
-This research was supervised by D.S. Smirnov and includes data from sociological surveys and statistical lectures.
